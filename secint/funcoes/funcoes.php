@@ -1,5 +1,7 @@
 <?php
 
+include_once './conexao.php';
+
 ini_set('display_errors', TRUE);
 error_reporting(E_ALL); //PHP > 5 mas diferente de 5.3.X 
 error_reporting(E_ALL | E_STRICT); // Exclusivamente PHP 5.3.x
@@ -7,128 +9,29 @@ error_reporting(E_ALL | E_STRICT); // Exclusivamente PHP 5.3.x
 //print_r($GLOBALS);
 //print '</pre>';
 
-include 'config.php';
 
-/*
-$server = $_SERVER['SERVER_NAME'];
-//echo $server;
-//Se a variavel $server retornar localhost
-if ($server == "localhost")
-    $url = "http://localhost/selecao";
-//Caso contrário recebe a url do servidor
-else
-    $url = "http://ufsm.br/pgcc/selecao";
-//echo $url;
 
-define('site', $url);
-define('usuario_id','1');
-*/
-
-$error = array();
-$resp = array();
-
-$f = isset($_GET['f']) ? $_GET['f'] : null;
-
-if ($f == "signup") {
-    signup();
-}
-
-if ($f == "login") {
-    login();
-}
-
-if ($f == "logout") {
-    logout();
-}
-
-if ($f == "add_identificacao") {
-    add_identificacao();
-}
-
-if ($f == "upload") {
-    upload_file();
-}
-
-function signup() {
-    $error = 0;
-    $resp['msg'] = '';
-
-//$msg = & $conteudo['msg'];
-
-    $fullname = isset($_POST["fullname"]);
-    $email = isset($_POST["email"]);
-    $add_username = isset($_POST["add_username"]);
-    $add_password = isset($_POST["add_password"]);
-    $re_password = isset($_POST["re_password"]);
-//print_r($fullname.$email);
-
-    $var_email = [$email];
-    $data_email = get_data("SELECT * FROM usuario WHERE email= ? ", $var_email);
-    if (count($data_email) > 0) {
-        ++$error;
-//$msg['email'] = 'Este email já está cadastrado cadastrado no sistema<br>';
-        $resp['msg'] = "Este email já está cadastrado cadastrado no sistema<br>";
-    }
-
-    $var_username = [$add_username];
-    $data_username = get_data("SELECT * FROM usuario WHERE username= ? ", $var_username);
-    if (count($data_username) > 0) {
-        ++$error;
-//$msg['username'] = 'Este username já está cadastrado cadastrado no sistema';
-        $resp['msg'] = "Este username já está cadastrado cadastrado no sistema";
-    }
-
-    if ($add_password != $re_password) {
-        ++$error;
-        $resp['msg'] = 'As senhas digitadas não são iguais<br>';
-    }
-
-    if ($error <= 0) {
-        $resp['msg'] = 'Cadastro realizado com sucesso!<br>';
-        date_default_timezone_set('America/Sao_Paulo');
-        $data_alteracao = date('Y-m-d H:i');
-        $perfil = '5';
-        $vars = [$fullname,
-            $email,
-            $add_username,
-            $add_password,
-            $perfil,
-            $data_alteracao];
-        print_r($vars);
-        $sql = 'INSERT INTO usuario (
-        nome,
-        email,
-        username,
-        password, 
-        perfil,
-        ultimo_acesso)
-            VALUES
-            (?,?,?,?,?,?)';
-
-        $data = set_data($sql, $vars);
-//print_r($data);
-        $alerta = $resp;
-//$alerta = $conteudo;
-        $mensagem = '<div class="alert alert-danger" role="alert" style="margin-top: 10px;">' . $alerta . '</div>';
-//header("refresh:2, login.php");
-    } else {
-
-        $alerta = $conteudo;
-        $mensagem = '<div class="alert alert-danger" role="alert" style="margin-top: 10px;">' . $alerta . '</div>';
-    }
-//print_r($resp);
-
-    print_r($mensagem);
-    print_r($conteudo);
+if (isset($_REQUEST['funcao']) && isset($_REQUEST['funcao']) != "") {
+    $funcao = $_REQUEST['funcao'] . '();';
+    eval($funcao);
 }
 
 function carrega_pagina() {
-    (isset($_GET['p'])) ? $pagina = $_GET['p'] : $pagina = 'home';
+    (isset($_GET['p'])) ? $pagina = $_GET['p'] : $pagina = 'atendimento';
     if (file_exists('page_' . $pagina . '.php')):
         require_once ('page_' . $pagina . '.php');
     else:
-        require_once ('page_home.php');
+        require_once ('page_atendimento.php');
     endif;
+}
+
+function verificaLogin() {
+    session_start();  //A seção deve ser iniciada em todas as páginas
+    if (!isset($_SESSION['usuarioID'])) {  //Verifica se há seções
+        session_destroy();      //Destroi a seção por segurança
+        header("Location: login.php");
+        exit; //Redireciona o visitante para login
+    }
 }
 
 function gera_titulos() {
@@ -250,7 +153,7 @@ function login() {
             $_SESSION["status"] = stripslashes($data[0]['status']);
             $_SESSION["ultimo_acesso"] = stripslashes($data[0]['ultimo_acesso']);
 
-            
+
 
             $resp['status'] = true;
             $resp['msg'] = "Login realizado com sucesso!";
@@ -547,6 +450,6 @@ function status_aplicacao($codigo_aplicacao) {
 //echo $diff->format('%y year(s), %m month(s), %d day(s), %H hour(s), %i minute(s) and %s second(s)');
 // 0 year(s), 0 month(s), 0 day(s), 00 hour(s), 20 minute(s) and 0 second(s)
 
-function getIdentificacao(){
+function getIdentificacao() {
     echo'acessou a funçao getIdentificacao';
 }
